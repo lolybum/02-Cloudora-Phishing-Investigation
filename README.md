@@ -383,7 +383,80 @@ This investigation reinforced several SOC analysis principles:
 
 ---
 
+---
+
+## 🖼️ Investigation Evidence Gallery
+
+The following screenshots document key stages of the CLD-0002 phishing investigation, from initial email analysis through campaign scoping and confirmation of Microsoft 365 account compromise.
+
+### 1. Reported Phishing Email — Header Analysis
+
+![Reported phishing email header analysis](screenshots/01-reported-phish-header-analysis.png)
+
+**Finding:** Analysis of the reported payroll email identified suspicious sender infrastructure and failed email-authentication controls consistent with phishing activity.
+
+---
+
+### 2. Phishing URL & Social-Engineering Pretext
+
+![Phishing URL and pretext](screenshots/02-phishing-url-and-pretext.png)
+
+**Finding:** The message used payroll urgency and a fraudulent HR/payroll URL to pressure the recipient into reconfirming account information.
+
+---
+
+### 3. Campaign Scope — KQL Analysis
+
+![Campaign scope authentication analysis](screenshots/07-kql-campaign-scope-authentication.png)
+
+**Finding:** KQL analysis identified multiple payroll-phishing variants, including messages that failed SPF, DKIM, and DMARC and a lookalike-domain variant whose authentication checks passed for the attacker-controlled domain.
+
+---
+
+### 4. Click & Credential Submission Analysis
+
+![Phishing clicks and credential submissions](screenshots/10-kql-clicks-and-credential-submissions.png)
+
+**Finding:** Six employees clicked phishing links. Two users submitted credentials, establishing the priority accounts for authentication-log investigation.
+
+---
+
+### 5. Compromised Account Sign-In Investigation
+
+![Compromised users Amsterdam sign-ins](screenshots/11-kql-compromised-users-amsterdam-signins.png)
+
+**Finding:** Authentication telemetry showed successful Microsoft 365 activity for the two credential-submission victims from Amsterdam, Netherlands, using suspicious source IP `198.18.7.200`.
+
+---
+
+### 6. Attacker IP Scope
+
+![Attacker IP scope](screenshots/12-kql-attacker-ip-scope.png)
+
+**Finding:** Pivoting on `198.18.7.200` identified five successful suspicious sign-ins associated with the two compromised accounts.
+
+---
+
+### 7. Phishing-to-Compromise Timeline
+
+![Phishing compromise timeline](screenshots/13-kql-phishing-compromise-timeline.png)
+
+**Finding:** Timeline correlation connected credential submission events with subsequent successful authentication from the suspicious Amsterdam infrastructure.
+
+---
+
+### 8. Compromised Account Summary
+
+![Compromised account summary](screenshots/16-kql-compromised-account-summary.png)
+
+**Finding:** Investigation results confirmed two Microsoft 365 accounts as compromised following credential submission.
+
+> **Evidence Note:** All identities, domains, IP addresses, URLs, email messages, and telemetry shown in this project are synthetic training data from the fictional Cloudora environment.
+
+---
+
 ## 📁 Repository Structure
+```text
 
 02-Cloudora-Phishing-Investigation/
 │
