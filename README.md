@@ -85,6 +85,7 @@ Email authentication analysis identified:
 - DKIM: **Fail**
 - DMARC: **Fail**
 - Composite Authentication: **Fail**
+- Originating IP: `198.18.44.23`
 - Suspicious originating infrastructure
 - Mismatched Reply-To domain
 - Payroll-themed social engineering
