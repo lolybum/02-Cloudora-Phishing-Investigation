@@ -198,6 +198,8 @@ Observed attacker activity:
 - Outlook Web App
 - **2 suspicious successful sign-ins**
 
+**Compromise Assessment:** Both credential-submission accounts were subsequently accessed successfully from the same Amsterdam-based attacker IP (`198.18.7.200`), confirming account compromise and linking the phishing activity to post-compromise Microsoft 365 access.
+
 Evidence:
 
 ![Compromised account sign-ins](screenshots/11-kql-compromised-users-amsterdam-signins.png)
@@ -243,7 +245,8 @@ Approximate time from credential submission to first suspicious sign-in:
 
 - **Freya:** 1 hour 47 minutes
 - **Ryan:** 4 hours 16 minutes
-
+**Timeline Assessment:** The temporal relationship between credential submission and subsequent successful authentication from the identified attacker infrastructure supports the conclusion that the submitted credentials were later used for unauthorized Microsoft 365 access. Freya's account showed the earliest post-compromise activity, followed by Ryan's account several hours later.
+  
 Evidence:
 
 ![Attack timeline](screenshots/13-kql-phishing-compromise-timeline.png)
@@ -259,6 +262,8 @@ The Amsterdam source:
 `198.18.7.200`
 
 was associated with only the two confirmed compromised users in the available dataset.
+
+**Scope Finding:** Environment-wide authentication analysis found no evidence that the identified attacker IP (`198.18.7.200`) successfully authenticated to any Cloudora accounts beyond Freya Lynn and Ryan Boyd. Based on the available sign-in telemetry, the confirmed compromise scope remained limited to these two accounts.
 
 Evidence:
 
@@ -276,6 +281,8 @@ The available sign-in dataset contained:
 
 Therefore, the investigation does **not** claim that the attacker attempted and failed to access additional accounts.
 
+
+
 Evidence:
 
 ![Authentication result summary](screenshots/15-kql-signin-result-summary.png)
@@ -287,8 +294,7 @@ Evidence:
 | Tactic | Technique | ID | Investigation Evidence |
 |---|---|---|---|
 | Initial Access | Spearphishing Link | **T1566.002** | Payroll-themed messages directed employees to fraudulent HR/payroll portals |
-| Initial Access | Cloud Accounts | **T1078.004** | Compromised Microsoft 365 credentials were used for successful cloud authentication |
-
+| Persistence / Privilege Escalation / Defense Evasion / Initial Access | Cloud Accounts | **T1078.004** | Compromised Microsoft 365 credentials were used for successful cloud authentication |
 The mapping is intentionally limited to techniques supported by the available evidence.
 
 ---
@@ -310,19 +316,26 @@ The mapping is intentionally limited to techniques supported by the available ev
 
 Recommended response actions include:
 
-- Temporarily restrict the two compromised accounts.
-- Force password resets for the two confirmed compromised accounts.
+### Immediate Containment
+
+- Temporarily restrict the two confirmed compromised accounts.
+- Force password resets for both compromised accounts.
 - Revoke active sessions and refresh tokens.
 - Review and validate registered MFA methods.
-- Review application consent and connected applications.
-- Review mailbox forwarding and inbox rules.
 - Remove delivered phishing messages from affected mailboxes.
 - Block identified phishing domains, URLs, and malicious infrastructure.
-- Investigate Freya's SharePoint activity for unauthorized file activity.
-- Notify affected users.
+
+### Account & Impact Investigation
+- Review application consent and connected applications.
+- Review mailbox forwarding and inbox rules for unauthorized changes.
+- Investigate Freya Lynn's SharePoint Online activity for unauthorized file access or other suspicious activity.
+- Review subsequent authentication activity for both compromised accounts.
+
+### User & Environment Remediation
+- Notify affected users and provide phishing-awareness guidance.
 - Increase monitoring for related authentication activity.
 - Strengthen MFA and Conditional Access controls.
-- Improve lookalike-domain and phishing detection.
+- Improve detection of lookalike domains and phishing infrastructure.
 
 ### Data Access Limitation
 
@@ -353,7 +366,7 @@ The query pack includes:
 - Environment-wide authentication analysis
 - Authentication-result analysis
 - Near-miss user identification
-
+**Investigation Note: Queries were developed and executed against the synthetic CloudoraMsgTrace_CL and CloudoraSignIn_CL datasets in Azure Data Explorer to scope the campaign, correlate user activity, and validate account compromise.
 ---
 
 ## 📸 Investigation Evidence
@@ -389,7 +402,6 @@ This investigation reinforced several SOC analysis principles:
 - Successful cloud authentication alone does not prove data exfiltration.
 
 ---
-
 ---
 
 ## 🖼️ Investigation Evidence Gallery
@@ -409,8 +421,8 @@ The following screenshots document key stages of the CLD-0002 phishing investiga
 ![Phishing URL and pretext](screenshots/02-phishing-url-and-pretext.png)
 
 **Finding:** The message used payroll urgency and a fraudulent HR/payroll URL to pressure the recipient into reconfirming account information.
-
 ---
+
 
 ### 3. Campaign Scope — KQL Analysis
 
@@ -460,9 +472,11 @@ The following screenshots document key stages of the CLD-0002 phishing investiga
 
 > **Evidence Note:** All identities, domains, IP addresses, URLs, email messages, and telemetry shown in this project are synthetic training data from the fictional Cloudora environment.
 
+---
+
 ## 🏁 Conclusion
 
-The CLD-0002 investigation identified and scoped a simulated payroll-themed phishing campaign targeting Cloudora employees. Email-header analysis and KQL investigation established that 40 employees were targeted, 36 received at least one phishing message, 6 users clicked a phishing link, and 2 users submitted credentials.
+The CLD-0002 investigation identified and scoped a simulated payroll-themed phishing campaign targeting Cloudora employees. Email-header analysis and KQL investigation established that 40 employees were targeted, 36 received at least one delivered phishing message, 6 users clicked a phishing link, and 2 users submitted credentials.
 
 Authentication-log analysis subsequently confirmed that the two credential-submission accounts were accessed from the identified attacker IP address in Amsterdam, Netherlands, resulting in five suspicious successful sign-ins across Microsoft 365 services.
 
