@@ -1,0 +1,250 @@
+// ============================================================
+// Cloudora SOC Project 02 - Payroll Phishing Investigation
+// Incident: CLD-0002
+// Analyst: Omolola Babarinde
+// Platform: Azure Data Explorer
+// Language: Kusto Query Language (KQL)
+// ============================================================
+//
+// Purpose:
+// KQL queries used to investigate the Cloudora payroll-themed
+// phishing campaign, determine campaign scope, identify users
+// who clicked or submitted credentials, and investigate
+// subsequent suspicious account activity.
+//
+// Dataset:
+// CloudoraMsgTrace_CL
+// CloudoraSignIn_CL
+//
+// NOTE: This project uses synthetic training data.
+// ============================================================
+
+// ============================================================
+// QUERY 01 - Campaign Scope and Email Authentication
+// Purpose: Identify phishing campaign variants, sender
+// infrastructure, authentication results, and delivery actions.
+// ============================================================
+
+CloudoraMsgTrace_CL
+| where EventType == "Delivery"
+| summarize
+    Messages=count(),
+    Recipients=dcount(RecipientAddress)
+    by Campaign,
+       SenderAddress,
+       SenderIP,
+       SPFResult,
+       DKIMResult,
+       DMARCResult,
+       DeliveryAction
+| order by Campaign asc, SenderIP asc
+
+
+// ============================================================
+// QUERY 02 - Delivered Phishing Recipients
+// Purpose: Identify users who received at least one delivered
+// phishing message.
+// Investigation result: 36 distinct recipients.
+// ============================================================
+
+CloudoraMsgTrace_CL
+| where EventType == "Delivery"
+    and DeliveryAction == "Delivered"
+| distinct RecipientAddress
+| order by RecipientAddress asc
+
+
+// ============================================================
+// QUERY 03 - Users Fully Protected by Quarantine
+// Purpose: Identify users whose phishing messages were
+// quarantined and who did not receive a delivered campaign email.
+// Investigation result: 4 users.
+// ============================================================
+
+let DeliveredTo =
+    CloudoraMsgTrace_CL
+    | where EventType == "Delivery"
+        and DeliveryAction == "Delivered"
+    | distinct RecipientAddress;
+
+CloudoraMsgTrace_CL
+| where EventType == "Delivery"
+    and DeliveryAction == "Quarantined"
+| where RecipientAddress !in (DeliveredTo)
+| distinct RecipientAddress
+| order by RecipientAddress asc
+
+
+// ============================================================
+// QUERY 04 - Phishing Click and Credential Submission Analysis
+// Purpose: Identify users who clicked phishing links and
+// determine whether credentials were submitted.
+// Investigation result: 6 clickers; 2 credential submissions.
+// ============================================================
+
+CloudoraMsgTrace_CL
+| where EventType == "Click"
+| project
+    TimeGenerated,
+    RecipientAddress,
+    Campaign,
+    Url,
+    ClickIP,
+    CredentialsSubmitted
+| order by TimeGenerated asc
+
+
+// ============================================================
+// QUERY 05 - Credential Victim Sign-In Investigation
+// Purpose: Review authentication activity for the two users
+// who submitted credentials.
+// ============================================================
+
+CloudoraSignIn_CL
+| where UserPrincipalName in (
+    "freya.lynn@cloudora.io",
+    "ryan.boyd@cloudora.io"
+)
+| project
+    TimeGenerated,
+    UserPrincipalName,
+    IPAddress,
+    Country,
+    City,
+    AppDisplayName,
+    ResultType,
+    ResultDescription
+| order by TimeGenerated asc
+
+
+// ============================================================
+// QUERY 06 - Attacker IP Pivot
+// Purpose: Determine which accounts were accessed from the
+// confirmed suspicious Amsterdam IP.
+// IOC: 198.18.7.200
+// Investigation result: Freya Lynn and Ryan Boyd only.
+// ============================================================
+
+CloudoraSignIn_CL
+| where IPAddress == "198.18.7.200"
+| project
+    TimeGenerated,
+    UserPrincipalName,
+    IPAddress,
+    Country,
+    City,
+    AppDisplayName,
+    ResultType,
+    ResultDescription
+| order by TimeGenerated asc
+
+
+// ============================================================
+// QUERY 07 - Credential Theft to Account Compromise Timeline
+// Purpose: Correlate credential submissions with subsequent
+// suspicious authentication from the attacker IP.
+// ============================================================
+
+let CredentialVictims =
+    CloudoraMsgTrace_CL
+    | where EventType == "Click"
+    | where CredentialsSubmitted == "Yes"
+    | project
+        TimeGenerated,
+        User=RecipientAddress,
+        Activity="Credential Submitted",
+        IP=ClickIP,
+        Detail=Url;
+
+let SuspiciousSignIns =
+    CloudoraSignIn_CL
+    | where IPAddress == "198.18.7.200"
+    | project
+        TimeGenerated,
+        User=UserPrincipalName,
+        Activity="Suspicious Sign-In",
+        IP=IPAddress,
+        Detail=strcat(
+            AppDisplayName,
+            " - ",
+            City,
+            ", ",
+            Country
+        );
+
+union CredentialVictims, SuspiciousSignIns
+| order by TimeGenerated asc
+
+
+// ============================================================
+// QUERY 08 - Environment-Wide Sign-In Source Analysis
+// Purpose: Compare IP addresses and geographic locations across
+// the sign-in dataset and identify shared or unusual sources.
+// ============================================================
+
+CloudoraSignIn_CL
+| summarize
+    SignIns=count(),
+    Users=dcount(UserPrincipalName)
+    by IPAddress, Country, City
+| order by Users desc, SignIns desc
+
+
+// ============================================================
+// QUERY 09 - Authentication Result Summary
+// Purpose: Determine whether the dataset contains successful
+// and/or failed authentication attempts.
+// Investigation result: 35 successful sign-ins; no failures
+// represented in the available dataset.
+// ============================================================
+
+CloudoraSignIn_CL
+| summarize
+    Attempts=count()
+    by ResultType, ResultDescription
+| order by Attempts desc
+
+
+// ============================================================
+// QUERY 10 - Compromised Account Summary
+// Purpose: Summarize attacker activity for each confirmed
+// compromised account.
+// ============================================================
+
+CloudoraSignIn_CL
+| where IPAddress == "198.18.7.200"
+| summarize
+    FirstSeen=min(TimeGenerated),
+    LastSeen=max(TimeGenerated),
+    SignInCount=count(),
+    Apps=make_set(AppDisplayName)
+    by UserPrincipalName,
+       IPAddress,
+       Country,
+       City
+| order by FirstSeen asc
+
+
+// ============================================================
+// QUERY 11 - Near-Miss Users
+// Purpose: Identify users who received a delivered phishing
+// message but did not click a phishing link.
+// Investigation result: 30 users.
+// ============================================================
+
+let Clickers =
+    CloudoraMsgTrace_CL
+    | where EventType == "Click"
+    | distinct RecipientAddress;
+
+CloudoraMsgTrace_CL
+| where EventType == "Delivery"
+    and DeliveryAction == "Delivered"
+| distinct RecipientAddress
+| where RecipientAddress !in (Clickers)
+| order by RecipientAddress asc
+
+
+// ============================================================
+// END OF CLD-0002 INVESTIGATION QUERIES
+// ============================================================
