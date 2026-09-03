@@ -1,3 +1,6 @@
+![Cloudora Payroll Phishing Investigation Banner](assets/cloudora-phishing-investigation-banner.png)
+
+
 # 🛡️ SOC Project 02 — Cloudora Payroll Phishing Investigation
 
 ## Incident CLD-0002 | Phishing & Microsoft 365 Account Compromise
