@@ -280,7 +280,7 @@ Evidence:
 | Tactic | Technique | ID | Investigation Evidence |
 |---|---|---|---|
 | Initial Access | Spearphishing Link | **T1566.002** | Payroll-themed messages directed employees to fraudulent HR/payroll portals |
-| Defense Evasion / Persistence / Privilege Escalation / Initial Access | Cloud Accounts | **T1078.004** | Compromised Microsoft 365 credentials were used for successful cloud authentication |
+| Initial Access | Cloud Accounts | **T1078.004** | Compromised Microsoft 365 credentials were used for successful cloud authentication |
 
 The mapping is intentionally limited to techniques supported by the available evidence.
 
@@ -304,7 +304,7 @@ The mapping is intentionally limited to techniques supported by the available ev
 Recommended response actions include:
 
 - Temporarily restrict the two compromised accounts.
-- Force password resets.
+- Force password resets for the two confirmed compromised accounts.
 - Revoke active sessions and refresh tokens.
 - Review and validate registered MFA methods.
 - Review application consent and connected applications.
@@ -453,6 +453,18 @@ The following screenshots document key stages of the CLD-0002 phishing investiga
 
 > **Evidence Note:** All identities, domains, IP addresses, URLs, email messages, and telemetry shown in this project are synthetic training data from the fictional Cloudora environment.
 
+## 🏁 Conclusion
+
+The CLD-0002 investigation identified and scoped a simulated payroll-themed phishing campaign targeting Cloudora employees. Email-header analysis and KQL investigation established that 40 employees were targeted, 36 received at least one phishing message, 6 users clicked a phishing link, and 2 users submitted credentials.
+
+Authentication-log analysis subsequently confirmed that the two credential-submission accounts were accessed from the identified attacker IP address in Amsterdam, Netherlands, resulting in five suspicious successful sign-ins across Microsoft 365 services.
+
+The investigation demonstrated an end-to-end Tier 1 SOC workflow involving phishing-email analysis, campaign scoping, IOC identification and pivoting, KQL-based log analysis, account-compromise validation, MITRE ATT&CK mapping, containment recommendations, and incident documentation.
+
+The available telemetry confirmed unauthorized cloud-account access but did not provide sufficient evidence to conclude that data exfiltration occurred.
+
+> **Final Assessment:** Confirmed phishing campaign with two compromised Microsoft 365 accounts. Containment, credential reset, session revocation, IOC blocking, and continued monitoring are recommended.
+
 ---
 
 ## 📁 Repository Structure
@@ -491,6 +503,7 @@ The following screenshots document key stages of the CLD-0002 phishing investiga
     ├── 14-kql-environment-signin-ip-analysis.png
     ├── 15-kql-signin-result-summary.png
     └── 16-kql-compromised-account-summary.png
+```
 
 ---
 
