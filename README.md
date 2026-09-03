@@ -109,12 +109,18 @@ The second phishing variant demonstrated an important SOC analysis principle:
 Variant B successfully authenticated because the attacker controlled the lookalike domain:
 
 `cloudora-hr-portal[.]example`
+- SPF: **Pass**
+- DKIM: **Pass**
+- DMARC: **Pass**
+- Composite Authentication: **Pass**
+- Originating IP: `198.18.51.7`
 
 The authentication controls validated the attacker's domain — **not `cloudora.io`**.
 
 The second phishing URL was:
 
 `hxxps://login[.]cloudora-hr-portal[.]example/verify`
+
 
 Evidence:
 
