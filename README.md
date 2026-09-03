@@ -385,10 +385,13 @@ This investigation reinforced several SOC analysis principles:
 
 ## 📁 Repository Structure
 
-```text
 02-Cloudora-Phishing-Investigation/
 │
 ├── README.md
+│
+├── assets/
+│   ├── README.md
+│   └── cloudora-phishing-investigation-banner.png
 │
 ├── queries/
 │   └── investigation-queries.kql
@@ -402,9 +405,19 @@ This investigation reinforced several SOC analysis principles:
     ├── 01-reported-phish-header-analysis.png
     ├── 02-phishing-url-and-pretext.png
     ├── 03-legitimate-payroll-email-baseline.png
-    ├── ...
+    ├── 04-variant-b-lookalike-domain-auth-pass.png
+    ├── 05-variant-b-phishing-url-pretext.png
+    ├── 06-benign-mailchimp-false-positive.png
+    ├── 07-kql-campaign-scope-authentication.png
+    ├── 08-kql-delivered-phish-recipients.png
+    ├── 09-kql-quarantine-protected-users.png
+    ├── 10-kql-clicks-and-credential-submissions.png
+    ├── 11-kql-compromised-users-amsterdam-signins.png
+    ├── 12-kql-attacker-ip-scope.png
+    ├── 13-kql-phishing-compromise-timeline.png
+    ├── 14-kql-environment-signin-ip-analysis.png
+    ├── 15-kql-signin-result-summary.png
     └── 16-kql-compromised-account-summary.png
-```
 
 ---
 
